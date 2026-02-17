@@ -1,4 +1,4 @@
-package Tier2.DistributedLock.KVSTORE.withLRU;
+package Tier2.KVSTORE.withLRU;
 
 public class InMemoryKeyValueStore<K, V> implements KeyValueStore<K, V> {
 
