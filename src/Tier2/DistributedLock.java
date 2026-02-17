@@ -1,4 +1,4 @@
-package Tier2.DistributedLock;
+package Tier2;
 
 import java.util.*;
         import java.util.concurrent.*;

@@ -1,0 +1,53 @@
+2️⃣ Core Design Thinking
+Key Observations
+Requests come from:
+    Outside (floor + direction)
+    Inside (destination floor)
+
+Elevator has:
+    Current floor
+    Direction
+    State (IDLE / MOVING / DOOR_OPEN)
+
+Controller is needed to:
+    Assign requests to elevators
+    Act as a central brain
+
+
+3️⃣ Identify Core Entities
+1. Elevator
+Responsible for:
+    Movement
+    Door operations
+    Processing assigned requests
+
+2. Request
+Represents:
+    Source floor
+    Destination floor
+    Direction
+
+3. ElevatorController
+Responsible for:
+    Receiving requests
+    Assigning elevators
+    Starting elevator movement
+
+
+High-Level Flow:
+    User presses button → creates Request
+    Controller assigns best elevator
+    Elevator processes request:
+        Moves floor by floor
+        Opens door
+        Goes idle again
+
+
+
+Class Responsibilities :
+
+ | Class              | Responsibility            |
+ | ------------------ | ------------------------- |
+ | Elevator           | Move & serve requests     |
+ | Request            | Immutable request data    |
+ | ElevatorController | Scheduling & coordination |

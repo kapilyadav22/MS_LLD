@@ -1,11 +1,18 @@
-package Tier2.DistributedLock.KVSTORE.withLRU;
+package Tier2.KVSTORE.withLRU;
 
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class LRUCache<K,V> {
+interface EvictionPolicy<K, V> {
+    V get(K key);
+    void put(K key, V value, long ttlMillis);
+    void delete(K key);
+}
+
+
+public class LRUCache<K,V> implements EvictionPolicy<K, V> {
 
     private final int capacity;
     private final Map<K,Node<K,V>> map;

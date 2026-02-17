@@ -1,8 +1,10 @@
 package Logger;
 
 public class FileAppender implements LogAppender {
+
+    @Override
     public synchronized void append(LogMessage message) {
-        // write to file (simplified)
+        // file write
     }
 }
 

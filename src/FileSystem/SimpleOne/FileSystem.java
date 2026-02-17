@@ -1,152 +1,172 @@
 package FileSystem.SimpleOne;
 
-
-
 import java.util.*;
 
-// -------------------- Node --------------------
+// ========================= Node =========================
 abstract class Node {
-    protected String name;
+
+    protected final String name;
 
     Node(String name) {
         this.name = name;
     }
 
-    abstract boolean isFile();
+    public String getName() {
+        return name;
+    }
+
+    abstract List<String> ls();
 }
 
-// -------------------- File --------------------
+// ========================= FileNode =========================
 class FileNode extends Node {
-    private StringBuilder content;
+
+    private final StringBuilder content = new StringBuilder();
 
     FileNode(String name) {
         super(name);
-        this.content = new StringBuilder();
     }
 
-    @Override
-    boolean isFile() {
-        return true;
-    }
-
-    void addContent(String data) {
+    public void addContent(String data) {
         content.append(data);
     }
 
-    String read() {
+    public String read() {
         return content.toString();
-    }
-}
-
-// -------------------- Directory --------------------
-class DirectoryNode extends Node {
-    Map<String, Node> children;
-
-    DirectoryNode(String name) {
-        super(name);
-        this.children = new HashMap<>();
     }
 
     @Override
-    boolean isFile() {
-        return false;
+    List<String> ls() {
+        return List.of(name);
     }
 }
 
-// -------------------- FileSystem --------------------
-public class FileSystem {
+// ========================= DirectoryNode =========================
+class DirectoryNode extends Node {
 
-    private final DirectoryNode root;
+    // TreeMap keeps children sorted automatically
+    private final Map<String, Node> children = new TreeMap<>();
 
-    public FileSystem() {
-        root = new DirectoryNode("/");
+    DirectoryNode(String name) {
+        super(name);
     }
 
-    // ls
-    public List<String> ls(String path) {
-        Node node = traverse(path);
-        List<String> result = new ArrayList<>();
+    public Node getChild(String name) {
+        return children.get(name);
+    }
 
-        if (node.isFile()) {
-            result.add(node.name);
-        } else {
-            DirectoryNode dir = (DirectoryNode) node;
-            result.addAll(dir.children.keySet());
-            Collections.sort(result);
-        }
+    public void addChild(Node node) {
+        children.put(node.getName(), node);
+    }
+
+    public boolean contains(String name) {
+        return children.containsKey(name);
+    }
+
+    @Override
+    List<String> ls() {
+        List<String> result = new ArrayList<>(children.keySet());
+        Collections.sort(result);
         return result;
     }
+}
 
-    // mkdir
+// ========================= FileSystem =========================
+public class FileSystem {
+
+    private final DirectoryNode root = new DirectoryNode("/");
+
+    // -------------------- ls --------------------
+    public List<String> ls(String path) {
+        return traverse(path).ls();
+    }
+
+    // -------------------- mkdir --------------------
     public void mkdir(String path) {
         traverseAndCreate(path, false);
     }
 
-    // addFile
+    // -------------------- addFile --------------------
     public void addFile(String path, String content) {
-        FileNode file = (FileNode) traverseAndCreate(path, true);
-        file.addContent(content);
-    }
+        Node node = traverseAndCreate(path, true);
 
-    // readFile
-    public String readFile(String path) {
-        Node node = traverse(path);
-        if (!node.isFile()) {
+        if (node instanceof FileNode file) {
+            file.addContent(content);
+        } else {
             throw new IllegalArgumentException("Path is not a file");
         }
-        return ((FileNode) node).read();
     }
 
-    // -------------------- Helpers --------------------
+    // -------------------- readFile --------------------
+    public String readFile(String path) {
+        Node node = traverse(path);
+
+        if (node instanceof FileNode file) {
+            return file.read();
+        }
+
+        throw new IllegalArgumentException("Path is not a file");
+    }
+
+    // ================= Traversal =====================
 
     private Node traverse(String path) {
+
+        if (path.equals("/")) {
+            return root;
+        }
+
         String[] parts = path.split("/");
         Node curr = root;
 
         for (int i = 1; i < parts.length; i++) {
-            if (!(curr instanceof DirectoryNode)) {
-                throw new IllegalArgumentException("Invalid path");
+
+            if (!(curr instanceof DirectoryNode dir)) {
+                throw new IllegalArgumentException("Invalid path: file in middle");
             }
-            curr = ((DirectoryNode) curr).children.get(parts[i]);
+
+            curr = dir.getChild(parts[i]);
+
             if (curr == null) {
                 throw new IllegalArgumentException("Path does not exist");
             }
         }
+
         return curr;
     }
 
     private Node traverseAndCreate(String path, boolean isFile) {
+
         String[] parts = path.split("/");
         DirectoryNode curr = root;
 
         for (int i = 1; i < parts.length; i++) {
-            String part = parts[i];
 
-            curr.children.putIfAbsent(
-                    part,
-                    (i == parts.length - 1 && isFile)
-                            ? new FileNode(part)
-                            : new DirectoryNode(part)
-            );
+            String currDir = parts[i];
+            boolean isLast = (i == parts.length - 1);
 
-            Node next = curr.children.get(part);
+            Node next = curr.getChild(currDir);
 
-            // if we are at the last segment, return it
-            if (i == parts.length - 1) {
-                return next;
+            if (next == null) {
+                next = createNode(currDir, isLast && isFile);
+                curr.addChild(next);
             }
 
-            // intermediate nodes MUST be directories
-            if (next.isFile()) {
-                throw new IllegalArgumentException(
-                        "Invalid path: file in the middle of path"
-                );
+            if (isLast) return next;
+
+            if (!(next instanceof DirectoryNode dir)) {
+                throw new IllegalArgumentException("File in middle of path");
             }
 
-            curr = (DirectoryNode) next;
+            curr = dir;
         }
+
         return curr;
     }
 
-}
+    private Node createNode(String name, boolean isFile) {
+        return isFile ? new FileNode(name)
+                : new DirectoryNode(name);
+    }
 
+}

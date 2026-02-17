@@ -1,9 +1,9 @@
 package RateLimiter.SeparateLImitStorage;
 
 
-import RateLimiter.RateLimitAlgorithm;
+import RateLimiter.RateLimiter;
 
-public class FixedWindowRateLimiter2 implements RateLimitAlgorithm {
+public class FixedWindowRateLimiter2 implements RateLimiter {
 
     private final int limit;
     private final long windowSizeMillis;

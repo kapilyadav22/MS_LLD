@@ -1,5 +1,5 @@
 package NotificationSystem;
 
-interface NotificationChannel {
+interface INotificationChannel {
     void send(Notification notification);
 }

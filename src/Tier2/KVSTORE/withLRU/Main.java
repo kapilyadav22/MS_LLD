@@ -1,13 +1,9 @@
-package Tier2.DistributedLock.KVSTORE.withLRU;
-
-import Tier2.DistributedLock.KVSTORE.withLRU.InMemoryKeyValueStore;
-import Tier2.DistributedLock.KVSTORE.withLRU.KeyValueStore;
+package Tier2.KVSTORE.withLRU;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
 
-        KeyValueStore<String, String> store =
-                new InMemoryKeyValueStore<>(2);
+        Cache<String, String> store = new Cache<>(new LRUCache<>(10),2000);
 
         store.put("A", "Apple", 3000);
         store.put("B", "Banana", 5000);

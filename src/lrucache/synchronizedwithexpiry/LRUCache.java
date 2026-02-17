@@ -4,39 +4,40 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class LRUCache {
+
+public class LRUCache<K,V> {
 
     private final int capacity;
-    private final Map<Integer, Node> map;
+    private final Map<K, Node<K,V>> map;
     private final ReentrantLock lock = new ReentrantLock();
 
-    private final Node head;
-    private final Node tail;
+    private final Node<K,V> head;
+    private final Node<K,V> tail;
 
     public LRUCache(int capacity) {
         this.capacity = capacity;
         this.map = new HashMap<>();
 
-        head = new Node();
+        head = new Node<K,V>();
 
-        tail = new Node();
+        tail = new Node<K,V>();
 
         head.next = tail;
         tail.prev = head;
     }
 
-    public int get(int key) {
+    public V get(K key) {
         lock.lock();
         try {
-            Node node = map.get(key);
+            Node<K,V> node = map.get(key);
             if (node == null) {
-                return -1;
+                return null;
             }
 
             if (isExpired(node)) {
                 removeNode(node);
                 map.remove(key);
-                return -1;
+                return null;
             }
 
             moveToFront(node);
@@ -46,13 +47,13 @@ public class LRUCache {
         }
     }
 
-    public void put(int key, int value, long ttlMillis) {
+    public void put(K key, V value, long ttlMillis) {
         lock.lock();
         try {
             if (capacity == 0) return;
 
             long expiryTime = System.currentTimeMillis() + ttlMillis;
-            Node node = map.get(key);
+            Node<K,V> node = map.get(key);
 
             if (node != null) {
                 node.value = value;
@@ -65,7 +66,7 @@ public class LRUCache {
                 evictLRU();
             }
 
-            Node newNode = new Node(key, value, expiryTime);
+            Node<K,V> newNode = new Node<K,V>(key, value, expiryTime);
             addAfterHead(newNode);
             map.put(key, newNode);
         } finally {
@@ -73,17 +74,17 @@ public class LRUCache {
         }
     }
 
-    private boolean isExpired(Node node) {
+    private boolean isExpired(Node<K,V> node) {
         return System.currentTimeMillis() > node.expiryTime;
     }
 
-    private void moveToFront(Node node) {
+    private void moveToFront(Node<K,V> node) {
         removeNode(node);
         addAfterHead(node);
     }
 
-    private void addAfterHead(Node node) {
-        Node first = head.next;
+    private void addAfterHead(Node<K,V> node) {
+        Node<K,V> first = head.next;
 
         head.next = node;
         node.prev = head;
@@ -92,9 +93,9 @@ public class LRUCache {
         first.prev = node;
     }
 
-    private void removeNode(Node node) {
-        Node prevNode = node.prev;
-        Node nextNode = node.next;
+    private void removeNode(Node<K,V> node) {
+        Node<K,V> prevNode = node.prev;
+        Node<K,V> nextNode = node.next;
 
         prevNode.next = nextNode;
         nextNode.prev = prevNode;
@@ -104,7 +105,7 @@ public class LRUCache {
     }
 
     private void evictLRU() {
-        Node lru = tail.prev;
+        Node<K,V> lru = tail.prev;
         if (lru == head) return;
 
         map.remove(lru.key);

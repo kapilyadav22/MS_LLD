@@ -1,4 +1,4 @@
-package Tier2.DistributedLock.KVSTORE;
+package Tier2.KVSTORE;
 
 import java.util.concurrent.ConcurrentHashMap;
 

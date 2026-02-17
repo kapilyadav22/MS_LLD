@@ -1,15 +1,21 @@
 package Logger;
 
 public class LogMessage {
-    final LogLevel level;
-    final String message;
-    final long timestamp;
-    final String threadName;
 
-    LogMessage(LogLevel level, String message) {
+    private final LogLevel level;
+    private final String message;
+    private final long timestamp;
+    private final String threadName;
+
+    public LogMessage(LogLevel level, String message) {
         this.level = level;
         this.message = message;
         this.timestamp = System.currentTimeMillis();
         this.threadName = Thread.currentThread().getName();
     }
+
+    public LogLevel getLevel() { return level; }
+    public String getMessage() { return message; }
+    public long getTimestamp() { return timestamp; }
+    public String getThreadName() { return threadName; }
 }

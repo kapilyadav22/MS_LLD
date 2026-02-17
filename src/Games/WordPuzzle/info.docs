@@ -1,0 +1,100 @@
+Key UML Relationships (Important to Explain in Interview)
+1️⃣ Composition
+    GameService owns UserProgress
+    Lifecycle tied to the game session
+2️⃣ Interface-based polymorphism
+    GameService → GuessEvaluator
+    GameService → GameRules
+This allows:
+Different evaluation logic
+Different rule sets (easy / hard mode)
+
+3️⃣ No circular dependencies
+    All arrows point towards abstractions
+    Concrete classes sit at the edges
+This is a big Microsoft design plus.
+
+
+┌────────────────────────┐
+│       GameService      │
+├────────────────────────┤
+│ - dailyWord : String   │
+│ - evaluator : GuessEvaluator |
+│ - rules : GameRules    │
+│ - userProgressMap : Map<String, UserProgress> |
+│ - locks : Map<String, ReentrantLock> |
+├────────────────────────┤
+│ + submitGuess(userId, guess) : TurnResult |
+└───────────┬────────────┘
+            │
+            │ uses
+            ▼
+┌────────────────────────┐
+│     GuessEvaluator      │<<interface>>
+├────────────────────────┤
+│ + evaluate(word, guess): TurnResult |
+└───────────┬────────────┘
+            │ implements
+            ▼
+┌────────────────────────┐
+│ DefaultGuessEvaluator  │
+├────────────────────────┤
+│ + evaluate(word, guess)|
+└────────────────────────┘
+
+
+┌────────────────────────┐
+│        GameRules        │<<interface>>
+├────────────────────────┤
+│ + validate(progress)   │
+│ + nextStatus(progress, result) |
+└───────────┬────────────┘
+            │ implements
+            ▼
+┌────────────────────────┐
+│   DefaultGameRules     │
+├────────────────────────┤
+│ - maxAttempts : int    │
+│ + validate()           │
+│ + nextStatus()         │
+└────────────────────────┘
+
+
+UML Class Diagram – Daily Word Puzzle Game
+
++----------------------+
+|  DailyWordPuzzleGame |
++----------------------+
+|  main(String[])      |
++----------+-----------+
+           |
+           v
++----------------------+
+|     GameService      |
++----------------------+
+| - dailyWord          |
+| - evaluator          |
+| - rules              |
+| - userProgressMap    |
+| - locks              |
++----------------------+
+| + submitGuess()      |
++----+------------+----+
+     |              |
+     v              v
++---------------+     +-------------+
+| GuessEvaluator   |  | GameRules   |
++---------------+     +--------------+
+| + evaluate() |   | + validate()   |
+|              |   | + nextStatus() |
++------+-------+   +------+------+
+       |                 |
+       v                 v
++--------------------+  +--------------------+
+| DefaultGuessEvaluator |  | DefaultGameRules |
++--------------------+  +--------------------+
+| + evaluate()       |  | - maxAttempts      |
++--------------------+  | + validate()       |
+                        | + nextStatus()     |
+                        +--------------------+
+

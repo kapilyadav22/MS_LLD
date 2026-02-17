@@ -4,7 +4,7 @@ import java.util.Map;
 
 public class NotificationChannelFactory  {
 
-    private final Map<String, NotificationChannel> channels = new HashMap<>();
+    private final Map<String, INotificationChannel> channels = new HashMap<>();
 
     public NotificationChannelFactory() {
         channels.put("EMAIL", new EmailNotification());
@@ -12,7 +12,7 @@ public class NotificationChannelFactory  {
         channels.put("PUSH", new PushNotification());
     }
 
-    public NotificationChannel getChannel(String type) {
+    public INotificationChannel getChannel(String type) {
         if (!channels.containsKey(type)) {
             throw new IllegalArgumentException("Unsupported channel: " + type);
         }

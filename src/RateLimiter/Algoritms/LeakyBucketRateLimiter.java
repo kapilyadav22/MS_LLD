@@ -1,34 +1,58 @@
 package RateLimiter.Algoritms;
 
-import RateLimiter.RateLimitAlgorithm;
+import RateLimiter.RateLimiter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 //Leaky Bucket
 /*
    Idea:
-    Requests enter bucket
+    Requests enter bucket2
     Bucket leaks at fixed rate
     Burst smoothing
  */
-public class LeakyBucketRateLimiter implements RateLimitAlgorithm {
 
-    private static class Bucket {
-        int water;
-        long lastLeakTime;
 
-        Bucket(long now) {
-            this.water = 0;
-            this.lastLeakTime = now;
-        }
+class LeakyBucket {
+
+    private int water;
+    private long lastLeakTime;
+
+    LeakyBucket(long now) {
+        this.water = 0;
+        this.lastLeakTime = now;
     }
+
+    void leak(int leakRatePerSecond, long now) {
+        long elapsedSeconds = (now - lastLeakTime) / 1000;
+
+        if (elapsedSeconds <= 0) return;
+
+        int leaked = (int) (elapsedSeconds * leakRatePerSecond);
+        water = Math.max(0, water - leaked);
+        lastLeakTime = now;
+    }
+
+    boolean canAccept(int capacity) {
+        return water < capacity;
+    }
+
+    void addDrop() {
+        water++;
+    }
+}
+
+public class LeakyBucketRateLimiter implements RateLimiter {
 
     private final int capacity;
     private final int leakRatePerSecond;
 
-    private final Map<String, Bucket> buckets = new HashMap<>();
+    private final Map<String, LeakyBucket> buckets = new ConcurrentHashMap<>();
+    private final Map<String, ReentrantLock> locks = new ConcurrentHashMap<>();
 
     public LeakyBucketRateLimiter(int capacity, int leakRatePerSecond) {
         this.capacity = capacity;
@@ -36,35 +60,25 @@ public class LeakyBucketRateLimiter implements RateLimitAlgorithm {
     }
 
     @Override
-    public synchronized boolean allow(String key) {
-        long now = System.currentTimeMillis();
+    public boolean allow(String key) {
+        ReentrantLock lock = locks.computeIfAbsent(key,k -> new ReentrantLock());
 
-        Bucket bucket = buckets.get(key);
-        if (bucket == null) {
-            bucket = new Bucket(now);
-            buckets.put(key, bucket);
-        }
+        lock.lock();
+        try {
+            long now = System.currentTimeMillis();
+            LeakyBucket bucket = buckets.computeIfAbsent(key,k -> new LeakyBucket(now));
+            bucket.leak(leakRatePerSecond, now);
 
-        leak(bucket, now);
+            if (bucket.canAccept(capacity)) {
+                bucket.addDrop();
+                return true;
+            }
 
-        if (bucket.water < capacity) {
-            bucket.water++;
-            return true;
-        }
-
-        return false;
-    }
-
-    private void leak(Bucket bucket, long now) {
-        long elapsedSeconds =
-                (now - bucket.lastLeakTime) / 1000;
-
-        if (elapsedSeconds > 0) {
-            int leaked =
-                    (int) (elapsedSeconds * leakRatePerSecond);
-
-            bucket.water = Math.max(0, bucket.water - leaked);
-            bucket.lastLeakTime = now;
+            return false;
+        } finally {
+            lock.unlock();
         }
     }
 }
+
+

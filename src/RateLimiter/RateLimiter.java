@@ -4,20 +4,11 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
-//
-// interface RateLimitAlgorithm {
-//    boolean allow(String key);
-//}
 
-public class RateLimiter {
-    private final RateLimitAlgorithm algorithm;
-    public RateLimiter(RateLimitAlgorithm algorithm) {
-        this.algorithm = algorithm;
-    }
 
-    public boolean allow(String key) {
-        return algorithm.allow(key);
-    }
+
+public interface RateLimiter {
+    boolean allow(String key);
 }
 
 /*

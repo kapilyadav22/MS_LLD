@@ -1,19 +1,45 @@
 package RateLimiter.Algoritms;
 
-import RateLimiter.RateLimitAlgorithm;
+import RateLimiter.RateLimiter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
+//Fixed Window
+class FixedWindow {
 
-//Fixed WIndow
-public class FixedWindowRateLimiter implements RateLimitAlgorithm {
+    private int count;
+    private long windowStart;
+
+    FixedWindow(long now) {
+        this.windowStart = now;
+        this.count = 0;
+    }
+
+    boolean allow(int limit, long windowSizeMillis, long now) {
+        if (now - windowStart >= windowSizeMillis) {
+            windowStart = now;
+            count = 0;
+        }
+
+        if (count < limit) {
+            count++;
+            return true;
+        }
+
+        return false;
+    }
+}
+
+public class FixedWindowRateLimiter implements RateLimiter {
 
     private final int limit;
     private final long windowSizeMillis;
 
-    private final Map<String, Integer> requestCount = new HashMap<>();
-    private final Map<String, Long> windowStartTime = new HashMap<>();
+    private final Map<String, FixedWindow> windows = new ConcurrentHashMap<>();
+    private final Map<String, ReentrantLock> locks = new ConcurrentHashMap<>();
 
     public FixedWindowRateLimiter(int limit, long windowSizeMillis) {
         this.limit = limit;
@@ -21,25 +47,16 @@ public class FixedWindowRateLimiter implements RateLimitAlgorithm {
     }
 
     @Override
-    public synchronized boolean allow(String key) {
-        long now = System.currentTimeMillis();
+    public boolean allow(String key) {
+        ReentrantLock lock = locks.computeIfAbsent(key,k -> new ReentrantLock() );
+        lock.lock();
+        try {
+            long now = System.currentTimeMillis();
+            FixedWindow window = windows.computeIfAbsent( key,k -> new FixedWindow(now));
 
-        windowStartTime.putIfAbsent(key, now);
-        requestCount.putIfAbsent(key, 0);
-
-        long windowStart = windowStartTime.get(key);
-
-        // Reset window if expired
-        if (now - windowStart >= windowSizeMillis) {
-            windowStartTime.put(key, now);
-            requestCount.put(key, 0);
+            return window.allow(limit, windowSizeMillis, now);
+        } finally {
+            lock.unlock();
         }
-
-        if (requestCount.get(key) < limit) {
-            requestCount.put(key, requestCount.get(key) + 1);
-            return true;
-        }
-
-        return false;
     }
 }

@@ -19,6 +19,7 @@ public class Main {
         // -------- READ --------
         System.out.println(fs.ls("/"));        // [a]
         System.out.println(fs.ls("/a/b"));     // [c.txt]
+        System.out.println(fs.ls("/a/b/c.txt")); // [c.txt]
         System.out.println(fs.readFile("/a/b/c.txt")); // hello
         /*
 

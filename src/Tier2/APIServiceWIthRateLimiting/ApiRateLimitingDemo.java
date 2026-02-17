@@ -1,4 +1,4 @@
-package Tier2.DistributedLock.APIServiceWIthRateLimiting;
+package Tier2.APIServiceWIthRateLimiting;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
