@@ -40,7 +40,6 @@ class RateLimiterConfig {
 enum RateLimiterType { TOKEN_BUCKET, FIXED_WINDOW}
 
 class RateLimiterFactory {
-
     public static RateLimiter create(RateLimiterType type, RateLimiterConfig config) {
         switch (type) {
             case TOKEN_BUCKET:

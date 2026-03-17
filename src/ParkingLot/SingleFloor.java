@@ -216,7 +216,7 @@ public class SingleFloor {
         Ticket t1 = parkingLot.parkVehicle(scooty);
         Ticket t2 = parkingLot.parkVehicle(auto);
 
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
+        this_thread::sleep_for(chrono::seconds(2));
 
         parkingLot.unparkVehicle(t1);
         parkingLot.unparkVehicle(t2);
