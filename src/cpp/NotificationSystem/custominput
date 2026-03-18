@@ -1,0 +1,23 @@
+Sample Input:
+
+10
+ADD_USER Alice
+ADD_USER Bob
+ADD_USER Charlie
+SUBSCRIBE Alice EMAIL
+SUBSCRIBE Alice SMS
+SUBSCRIBE Bob PUSH
+SUBSCRIBE Charlie EMAIL
+SEND Hello Everyone!
+UNSUBSCRIBE Alice SMS
+SEND Second Notification Message
+
+Expected Output:
+
+[EMAIL] to Alice: Hello Everyone!
+[SMS] to Alice: Hello Everyone!
+[PUSH] to Bob: Hello Everyone!
+[EMAIL] to Charlie: Hello Everyone!
+[EMAIL] to Alice: Second Notification Message
+[PUSH] to Bob: Second Notification Message
+[EMAIL] to Charlie: Second Notification Message

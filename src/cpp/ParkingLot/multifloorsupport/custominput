@@ -1,0 +1,27 @@
+Input Structure:
+    f                     -> number of floors
+    n (per floor)         -> slots per floor
+    q                     -> number of operations
+
+    Commands:
+    PARK vehicleNumber
+    UNPARK ticketId
+
+Sample Input
+    2
+    2
+    3
+    5
+    PARK DL01
+    PARK DL02
+    PARK DL03
+    UNPARK T1
+    PARK DL04
+
+Sample Output:
+    PARKED T123 FLOOR F0 SLOT 0
+    PARKED T456 FLOOR F0 SLOT 1
+    PARKED T789 FLOOR F1 SLOT 0
+    PAY T123 2
+    UNPARKED T123
+    PARKED T999 FLOOR F0 SLOT 0

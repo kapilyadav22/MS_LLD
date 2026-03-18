@@ -1,0 +1,60 @@
+
+/*
+
+Domain Entities (Core Business Objects)
+    Driver
+    Rider
+    Ride
+    Location
+
+Service / Control Layer
+    RideManager
+    MatchingStrategy
+    NearestDriverStrategy
+
+INPUT:
+INIT_DRIVER D1 0 0
+INIT_DRIVER D2 5 5
+REQUEST_RIDE R1 U1 1 1 5 5
+REQUEST_RIDE R2 U2 5 5 2 2
+COMPLETE_RIDE R1
+COMPLETE_RIDE R2
+EXIT
+
+OUTPUT:
+Driver D1 added
+Driver D2 added
+Ride R1 REQUESTED
+Ride R1 ACCEPTED by Driver D1
+Ride R2 REQUESTED
+Ride R2 ACCEPTED by Driver D2
+Ride R1 COMPLETED
+Distance: 8
+Fare: Rs 80
+Payment of Rs 80 completed via CASH
+Ride R2 COMPLETED
+Distance: 6
+Fare: Rs 60
+Payment of Rs 60 completed via CASH
+
+
+Supported Commands (Input Format)
+    INIT_DRIVER <driverId> <x> <y>
+    REQUEST_RIDE <rideId> <riderId> <user1> <sourceX> <sourceY> <destx> <desty>
+    COMPLETE_RIDE <rideId>
+    EXIT
+
+Description:
+
+INIT_DRIVER D1 0 0
+    → Adds a driver with id D1 at location (0,0)
+
+REQUEST_RIDE RIDE1 R1 1 1
+    → Rider R1 requests ride RIDE1 from location (1,1)
+
+COMPLETE_RIDE RIDE1
+    → Marks ride RIDE1 as completed
+
+EXIT
+    → Terminates the program
+*/

@@ -1,0 +1,69 @@
++----------------------+
+|     MessageQueue     |
++----------------------+
+| - topics: map<string,|
+|            Topic>    |
++----------------------+
+| + createTopic()      |
+| + getTopic()         |
++----------+-----------+
+           |
+           | (manages)
+           |
+           v
++----------------------+
+|        Topic         |
++----------------------+
+| - name: string       |
+| - messages: vector<  |
+|    shared_ptr<Message>>
+| - mtx: mutex         |
++----------------------+
+| + publish(msg)       |
+| + getMessage(offset) |
+| + size()             |
+| + getName()          |
++----------+-----------+
+           |
+           | (composition)
+           |
+           v
++----------------------+
+|       Message        |
++----------------------+
+| - id: int            |
+| - payload: string    |
++----------------------+
+| + Message()          |
++----------------------+
+
+
++----------------------+
+|       Producer       |
++----------------------+
+| - name: string       |
++----------------------+
+| + publish(topic, id, |
+|   payload)           |
++----------+-----------+
+           |
+           | (uses)
+           |
+           v
+        Topic
+
+
++----------------------+
+|       Consumer       |
++----------------------+
+| - name: string       |
+| - offsets: map<      |
+|   topic, int>        |
++----------------------+
+| + consume(topic)     |
++----------+-----------+
+           |
+           | (uses)
+           |
+           v
+        Topic

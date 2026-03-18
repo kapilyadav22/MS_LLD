@@ -1,0 +1,28 @@
+Input Structure
+    q (number of operations)
+
+Operations:
+    INSERT pos text
+    DELETE pos length
+    FORMAT pos length bold italic   (1/0 flags)
+    UNDO
+    REDO
+    PRINT
+
+Sample Input
+    8
+    INSERT 0 Hello
+    INSERT 5  World
+    PRINT
+    FORMAT 0 5 1 0
+    PRINT
+    UNDO
+    PRINT
+    REDO
+    PRINT
+
+Sample Output
+    Hello World
+    <b>Hello</b> World
+    Hello World
+    <b>Hello</b> World

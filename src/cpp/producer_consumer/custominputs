@@ -1,0 +1,34 @@
+🧾 Input Structure (HackerRank Style)
+Q  (number of queries)
+
+Commands:
+CREATE_TOPIC <topic_name>
+CREATE_PRODUCER <producer_name>
+CREATE_CONSUMER <consumer_name>
+PUBLISH <producer_name> <topic_name> <message_id> <payload>
+CONSUME <consumer_name> <topic_name>
+
+📥 Sample Input
+    10
+    CREATE_TOPIC orders
+    CREATE_PRODUCER p1
+    CREATE_CONSUMER c1
+    PUBLISH p1 orders 1 orderA
+    PUBLISH p1 orders 2 orderB
+    CONSUME c1 orders
+    CONSUME c1 orders
+    CONSUME c1 orders
+    CREATE_CONSUMER c2
+    CONSUME c2 orders
+
+📤 Sample Output
+    Topic created: orders
+    Producer created: p1
+    Consumer created: c1
+    p1 published to orders: orderA
+    p1 published to orders: orderB
+    c1 consumed from orders: orderA
+    c1 consumed from orders: orderB
+    c1 no new messages in orders
+    Consumer created: c2
+    c2 consumed from orders: orderA

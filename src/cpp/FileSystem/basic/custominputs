@@ -1,0 +1,24 @@
+Input Structure (Basic)
+
+q
+command args...
+
+
+Commands:
+    mkdir path
+    create path
+    write path content
+    read path
+    ls path
+
+Sample Input
+    7
+    mkdir /a/b
+    create /a/b/file1
+    write /a/b/file1 hello
+    read /a/b/file1
+    ls /a/b
+
+Sample Output
+    hello
+    file1

@@ -1,0 +1,29 @@
+Input Structure (Extended)
+    q
+    command args...
+
+
+Commands:
+    create path
+    write path content
+    append path content
+    read path
+    delete path
+    move src dest
+    ls path
+
+Sample Input
+    8
+    create /a/file1
+    write /a/file1 hello
+    append /a/file1 world
+    read /a/file1
+    create /a/file2
+    ls /a
+    move /a/file2 /a/file3
+    ls /a
+
+Sample Output
+    helloworld
+    file1 file2
+    file1 file3

@@ -1,0 +1,27 @@
+📥 Input Structure (Hackerrank Style)
+    n
+    <MIN_LOG_LEVEL> <filename>
+    <LEVEL> <message>
+    <LEVEL> <message>
+    ...
+
+📌 Sample Input
+    5
+    INFO logs.txt
+    DEBUG Debugging system
+    INFO System started
+    WARN Low memory
+    ERROR Crash detected
+    INFO User logged in
+
+📤 Sample Output (Console)
+    [INFO] System started
+    [WARN] Low memory
+    [ERROR] Crash detected
+    [INFO] User logged in
+
+📁 File Output (logs.txt)
+    [INFO] System started
+    [WARN] Low memory
+    [ERROR] Crash detected
+    [INFO] User logged in

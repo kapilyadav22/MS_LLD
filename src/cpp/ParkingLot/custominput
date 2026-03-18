@@ -1,0 +1,30 @@
+Input Structure
+n                        -> number of slots
+slotId size              -> each slot
+q                        -> number of queries
+
+Commands:
+    PARK vehicleNumber type size
+    UNPARK ticketId
+
+Sample Input
+    3
+    S1 SMALL
+    S2 MEDIUM
+    S3 LARGE
+    5
+    PARK DL01 BIKE SMALL
+    PARK DL02 CAR MEDIUM
+    UNPARK T1
+    PARK DL03 TRUCK LARGE
+    UNPARK T2
+
+
+Sample Output (approx)
+    PARKED T123 S1
+    PARKED T456 S2
+    PAID T123 2
+    UNPARKED T123
+    PARKED T789 S3
+    PAID T456 5
+    UNPARKED T456

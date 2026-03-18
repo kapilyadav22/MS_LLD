@@ -62,17 +62,52 @@ public:
         this->refillRatePerSecond = refillRatePerSecond;
     }
 
+//    bool allow(string key) override {
+//
+//        lock_guard<mutex> guard(locks[key]);
+//
+//        auto now = steady_clock::now();
+//
+//        if (buckets.find(key) == buckets.end()) {
+//            buckets[key] = make_shared<Bucket>(capacity, now);
+//        }
+//
+//        auto& bucket = buckets[key];
+//
+//        bucket->refill(capacity, refillRatePerSecond, now);
+//
+//        if (bucket->hasTokens()) {
+//            bucket->consume();
+//            return true;
+//        }
+//
+//        return false;
+//    }
+    mutex mapLock;
+
     bool allow(string key) override {
 
-        lock_guard<mutex> guard(locks[key]);
+        shared_ptr<Bucket> bucket;
+        mutex* mtx;
 
-        auto now = steady_clock::now();
+        // 🔒 MAP LEVEL LOCK
+        {
+            lock_guard<mutex> guard(mapLock);
 
-        if (buckets.find(key) == buckets.end()) {
-            buckets[key] = make_shared<Bucket>(capacity, now);
+            if (buckets.find(key) == buckets.end()) {
+                auto now = steady_clock::now();
+                buckets[key] = make_shared<Bucket>(capacity, now);
+                locks[key] = mutex();
+            }
+
+            bucket = buckets[key];
+            mtx = &locks[key];
         }
 
-        auto& bucket = buckets[key];
+        // 🔒 PER-KEY LOCK
+        lock_guard<mutex> guard(*mtx);
+
+        auto now = steady_clock::now();
 
         bucket->refill(capacity, refillRatePerSecond, now);
 
@@ -87,13 +122,9 @@ public:
 
 
 class RateLimiterFactory {
-
 public:
-
     static unique_ptr<RateLimiter> createRateLimiter(const string& type) {
-
         if (type == "TokenBucket") {
-
             int capacity, refillRate;
             cin >> capacity >> refillRate;
 
@@ -108,7 +139,6 @@ int main() {
 
     string limiterType;
     cin >> limiterType;
-
     auto limiter = RateLimiterFactory::createRateLimiter(limiterType);
 
     string key;

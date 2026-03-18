@@ -3,49 +3,40 @@ using namespace std;
 
 class User {
 public:
-    string id;
-    string name;
-
+    string id, name;
     User(string id, string name) : id(id), name(name) {}
 };
 
 class Split {
 public:
-    shared_ptr<User> user;
+    User* user;
     double amount;
 
-    Split(shared_ptr<User> user) : user(user), amount(0) {}
+    Split(User* user) : user(user), amount(0) {}
 };
 
 class SplitStrategy {
 public:
-    virtual void calculateSplit(double amount, vector<shared_ptr<Split>>& splits) = 0;
+    virtual void calculateSplit(double amount, vector<Split>& splits) = 0;
     virtual ~SplitStrategy() {}
 };
 
 class EqualSplit : public SplitStrategy {
 public:
-    void calculateSplit(double amount, vector<shared_ptr<Split>>& splits) override {
-
+    void calculateSplit(double amount, vector<Split>& splits) override {
         double share = amount / splits.size();
-
-        for (auto &s : splits) {
-            s->amount = share;
-        }
+        for (auto &s : splits) s.amount = share;
     }
 };
 
 class ExactSplit : public SplitStrategy {
 public:
-    void calculateSplit(double amount, vector<shared_ptr<Split>>& splits) override {
-
+    void calculateSplit(double amount, vector<Split>& splits) override {
         double total = 0;
+        for (auto &s : splits) total += s.amount;
 
-        for (auto &s : splits)
-            total += s->amount;
-
-        if (total != amount)
-            throw runtime_error("Invalid split");
+        if (abs(total - amount) > 1e-6)
+            throw runtime_error("Exact split mismatch");
     }
 };
 
@@ -53,118 +44,202 @@ class Expense {
 public:
     string id;
     double amount;
-    shared_ptr<User> paidBy;
-    vector<shared_ptr<Split>> splits;
+    User* paidBy;
+    vector<Split> splits;
 
-    Expense(string id,
-            double amount,
-            shared_ptr<User> paidBy,
-            vector<shared_ptr<Split>> splits)
+    Expense(string id, double amount, User* paidBy, vector<Split> splits)
         : id(id), amount(amount), paidBy(paidBy), splits(splits) {}
 };
 
 class ExpenseManager {
-
     unordered_map<string, unordered_map<string, double>> balanceSheet;
 
 public:
+    void addExpense(Expense& expense, SplitStrategy& strategy) {
 
-    void addExpense(
-        shared_ptr<Expense> expense,
-        shared_ptr<SplitStrategy> strategy
-    ) {
+        strategy.calculateSplit(expense.amount, expense.splits);
+        string payer = expense.paidBy->id;
 
-        strategy->calculateSplit(expense->amount, expense->splits);
+        for (auto &split : expense.splits) {
+            string user = split.user->id;
+            if (user == payer) continue;
 
-        string payer = expense->paidBy->id;
-
-        for (auto &split : expense->splits) {
-
-            string user = split->user->id;
-
-            if (user == payer)
-                continue;
-
-            balanceSheet[user][payer] += split->amount;
-            balanceSheet[payer][user] -= split->amount;
+            balanceSheet[user][payer] += split.amount;
+            balanceSheet[payer][user] -= split.amount;
         }
     }
 
     void showBalances() {
+        bool empty = true;
 
         for (auto &p : balanceSheet) {
-
             for (auto &q : p.second) {
-
                 if (q.second > 0) {
-                    cout << p.first
-                         << " owes "
-                         << q.first
-                         << " : "
-                         << q.second
-                         << endl;
+                    cout << p.first << " owes "
+                         << q.first << " : "
+                         << q.second << "\n";
+                    empty = false;
                 }
             }
         }
+
+        if (empty) cout << "No balances\n";
+    }
+
+    void showBalances(const string& user) {
+        bool empty = true;
+
+        if (balanceSheet.count(user)) {
+            for (auto &q : balanceSheet[user]) {
+                if (q.second > 0) {
+                    cout << user << " owes "
+                         << q.first << " : "
+                         << q.second << "\n";
+                    empty = false;
+                }
+            }
+        }
+
+        for (auto &p : balanceSheet) {
+            if (p.second.count(user) && p.second[user] > 0) {
+                cout << p.first << " owes "
+                     << user << " : "
+                     << p.second[user] << "\n";
+                empty = false;
+            }
+        }
+
+        if (empty) cout << "No balances\n";
     }
 };
 
-class Splitwise {
-
-    unordered_map<string, shared_ptr<User>> users;
-    shared_ptr<ExpenseManager> expenseManager;
+class SplitwiseService {
+    unordered_map<string, User> users;
+    ExpenseManager expenseManager;
+    int expenseId = 1;
 
 public:
-
-    Splitwise() {
-        expenseManager = make_shared<ExpenseManager>();
-    }
-
     void addUser(string id, string name) {
-        users[id] = make_shared<User>(id, name);
+        users.emplace(id, User(id, name));
     }
 
-    shared_ptr<User> getUser(string id) {
-        return users[id];
+    User* getUser(const string& id) {
+        auto it = users.find(id);
+        return (it != users.end()) ? &it->second : nullptr;
     }
 
-    shared_ptr<ExpenseManager> getExpenseManager() {
-        return expenseManager;
+    void addExpense(string paidBy, double amount,
+                    vector<string>& userIds,
+                    string type,
+                    vector<double>& values) {
+
+        User* payer = getUser(paidBy);
+        if (!payer) {
+            cout << "User not found\n";
+            return;
+        }
+
+        vector<Split> splits;
+        for (auto &id : userIds) {
+            User* u = getUser(id);
+            if (!u) {
+                cout << "User not found\n";
+                return;
+            }
+            splits.emplace_back(u);
+        }
+
+        unique_ptr<SplitStrategy> strategy;
+
+        if (type == "EQUAL") {
+            strategy = make_unique<EqualSplit>();
+        }
+        else if (type == "EXACT") {
+            if (values.size() != splits.size()) {
+                cout << "Invalid values\n";
+                return;
+            }
+            for (int i = 0; i < splits.size(); i++)
+                splits[i].amount = values[i];
+
+            strategy = make_unique<ExactSplit>();
+        }
+        else {
+            cout << "Invalid type\n";
+            return;
+        }
+
+        string id = "e" + to_string(expenseId++);
+        Expense expense(id, amount, payer, splits);
+
+        expenseManager.addExpense(expense, *strategy);
+    }
+
+    void showBalances() {
+        expenseManager.showBalances();
+    }
+
+    void showBalances(string user) {
+        if (!getUser(user)) {
+            cout << "User not found\n";
+            return;
+        }
+        expenseManager.showBalances(user);
     }
 };
 
 int main() {
 
-    Splitwise app;
+    SplitwiseService service;
+    string command;
 
-    app.addUser("u1", "Alice");
-    app.addUser("u2", "Bob");
-    app.addUser("u3", "Charlie");
+    while (cin >> command) {
 
-    auto u1 = app.getUser("u1");
-    auto u2 = app.getUser("u2");
-    auto u3 = app.getUser("u3");
+        if (command == "EXIT") break;
 
-    vector<shared_ptr<Split>> splits;
+        else if (command == "ADD_USER") {
+            string id, name;
+            cin >> id >> name;
+            service.addUser(id, name);
+        }
 
-    splits.push_back(make_shared<Split>(u1));
-    splits.push_back(make_shared<Split>(u2));
-    splits.push_back(make_shared<Split>(u3));
+        else if (command == "EXPENSE") {
+            string paidBy, type;
+            double amount;
+            int n;
 
-    auto expense = make_shared<Expense>(
-        "e1",
-        3000,
-        u1,
-        splits
-    );
+            cin >> paidBy >> amount >> n;
 
-    auto strategy = make_shared<EqualSplit>();
+            vector<string> users(n);
+            for (int i = 0; i < n; i++)
+                cin >> users[i];
 
-    app.getExpenseManager()->addExpense(expense, strategy);
+            cin >> type;
 
-    app.getExpenseManager()->showBalances();
+            vector<double> values;
+            if (type == "EXACT") {
+                values.resize(n);
+                for (int i = 0; i < n; i++)
+                    cin >> values[i];
+            }
+
+            service.addExpense(paidBy, amount, users, type, values);
+        }
+
+        else if (command == "SHOW") {
+            string user;
+
+            if (cin.peek() == '\n') {
+                service.showBalances();
+            } else {
+                cin >> user;
+                service.showBalances(user);
+            }
+        }
+    }
+
+    return 0;
 }
-
 
 /*
 
@@ -182,6 +257,7 @@ Example Input 1:
     ADD_USER u3 Charlie
     EXPENSE u1 3000 3 u1 u2 u3 EQUAL
     SHOW
+    EXIT
 
 
 Expected Output:
@@ -190,7 +266,7 @@ Expected Output:
 
 Example Input 2
     EXPENSE u2 1250 2 u2 u3 EXACT 370 880
-    SHOW
+    SHOW u1
 
 Output
     u2 owes u1 : 1000
