@@ -1,29 +1,37 @@
-/*
+
 Always use shared_ptr/unique_ptr
 Avoid raw pointers
 Use interfaces with pure virtual functions
 Use factory functions
 Keep main() simple
-*/
 
 
-/*
+--------------------------------------------------------------
+
+enum class DriverStatus { AVAILABLE, BUSY };
+
+
+--------------------------------------------------------------
+
 1.) Use header file :
 #include<bits/stdc++.h>
 using namespace std;
-*/
 
 
-/*
+
+--------------------------------------------------------------
+
 2.) Interface Template
 class PaymentStrategy {
 public:
     virtual void pay(double amount) = 0;
     virtual ~PaymentStrategy() = default;
 };
-*/
 
-/*
+
+
+--------------------------------------------------------------
+
 3. Implementation Classes : use override
 class CreditCardPayment : public PaymentStrategy {
     public:
@@ -38,11 +46,12 @@ class UPIPayment : public PaymentStrategy {
         cout << "Paid " << amount << " using UPI\n";
     }
 };
-*/
 
 
 
-/*
+
+--------------------------------------------------------------
+
 4. Core Domain Class
 
 Example service class.
@@ -62,11 +71,12 @@ public:
 };
 
 Notice: shared_ptr<Interface> - avoids pointer problems.
-*/
 
 
 
-/*
+--------------------------------------------------------------
+
+
 5. Factory Pattern Template
 
 Useful for many LLD problems.
@@ -82,11 +92,12 @@ public:
         return nullptr;
     }
 };
-*/
 
 
 
-/*
+
+--------------------------------------------------------------
+
 6. Manager / Controller Layer
 class PaymentManager {
 private:
@@ -101,11 +112,12 @@ public:
         services[name]->processPayment(amount);
     }
 };
-*/
 
 
 
-/*
+--------------------------------------------------------------
+
+
 Clean Main Function
 
 int main() {
@@ -118,18 +130,19 @@ int main() {
 
     return 0;
 }
-*/
 
 
-/*
+
+
 #include <memory>
 It enables:
     shared_ptr
     make_shared
-*/
 
 
-/*
+
+--------------------------------------------------------------
+
 Use auto mainly for:
     Iterators
     Smart pointers
@@ -139,18 +152,23 @@ Use auto mainly for:
 Example:
     auto strategy = PaymentFactory::create("CARD");
     auto paymentService = make_shared<PaymentService>(strategy);
-*/
 
-/*
+
+--------------------------------------------------------------
+
 for(auto& x : v) {
     x = 10;
 }
+
+
+
 
 Rule:
     auto → copy
     auto& → reference
     const auto& → read-only reference
-*/
+
+--------------------------------------------------------------
 
 
 | Situation             | Typical choice |
@@ -159,4 +177,5 @@ Rule:
 | Single ownership      | unique_ptr     |
 | Shared ownership      | shared_ptr     |
 | Non-owning dependency | reference      |
+
 
