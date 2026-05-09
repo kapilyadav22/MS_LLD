@@ -1,11 +1,3 @@
-/*
-New Features
-    Multi-floor support
-    Nearest slot allocation (priority-based)
-    Thread-safe (concurrency using per-floor locks)
-    Better scalability (no linear scan across all slots)
-*/
-
 #include <bits/stdc++.h>
 using namespace std;
 using namespace chrono;
@@ -16,25 +8,22 @@ TimePoint nowTime() {
     return steady_clock::now();
 }
 
-/* ================= ENUMS ================= */
+/* ================= ENUM ================= */
 
-enum class VehicleType { BIKE, SCOOTY, AUTO, CAR, TRUCK };
 enum class VehicleSize { SMALL, MEDIUM, LARGE };
 
 /* ================= VEHICLE ================= */
 
 class Vehicle {
     string number;
-    VehicleType type;
     VehicleSize size;
 
 public:
-    Vehicle(string num, VehicleType t, VehicleSize s)
-        : number(num), type(t), size(s) {}
+    Vehicle(string num, VehicleSize s)
+        : number(num), size(s) {}
 
-    VehicleType getType() { return type; }
-    VehicleSize getSize() { return size; }
-    string getNumber() { return number; }
+    VehicleSize getSize() const { return size; }
+    string getNumber() const { return number; }
 };
 
 /* ================= SLOT ================= */
@@ -46,12 +35,13 @@ class ParkingSlot {
     shared_ptr<Vehicle> vehicle;
 
 public:
-    ParkingSlot(string id, VehicleSize cap) : id(id), capacity(cap) {}
+    ParkingSlot(string id, VehicleSize cap)
+        : id(id), capacity(cap) {}
 
-    bool isFree() { return free; }
+    bool isFree() const { return free; }
 
     bool canFit(shared_ptr<Vehicle> v) {
-        return (int)v->getSize() <= (int)capacity;
+        return free && (int)v->getSize() <= (int)capacity;
     }
 
     void park(shared_ptr<Vehicle> v) {
@@ -64,7 +54,7 @@ public:
         vehicle = nullptr;
     }
 
-    string getId() { return id; }
+    string getId() const { return id; }
 };
 
 /* ================= FLOOR ================= */
@@ -72,13 +62,10 @@ public:
 class Floor {
     string id;
     vector<shared_ptr<ParkingSlot>> slots;
-    // FREE slots sorted → nearest allocation
     set<int> freeSlots;
-
     mutex mtx;
 
 public:
-
     Floor(string id, vector<shared_ptr<ParkingSlot>> s)
         : id(id), slots(s) {
 
@@ -93,7 +80,6 @@ public:
         lock_guard<mutex> lock(mtx);
 
         for (int idx : freeSlots) {
-
             if (slots[idx]->canFit(v)) {
 
                 freeSlots.erase(idx);
@@ -107,20 +93,18 @@ public:
     }
 
     void freeSlot(int idx) {
-
         lock_guard<mutex> lock(mtx);
 
         slots[idx]->unpark();
         freeSlots.insert(idx);
     }
 
-    string getId() { return id; }
+    string getId() const { return id; }
 };
 
 /* ================= TICKET ================= */
 
 class Ticket {
-
     string id;
     TimePoint entry, exitT;
 
@@ -129,7 +113,6 @@ class Ticket {
     int slotIdx;
 
 public:
-
     Ticket(string id,
            shared_ptr<Vehicle> v,
            shared_ptr<Floor> f,
@@ -143,38 +126,37 @@ public:
         exitT = nowTime();
     }
 
-    long durationSeconds() {
+    long durationSeconds() const {
         auto sec = duration_cast<seconds>(exitT - entry).count();
         return max(1L, sec);
     }
 
-    string getId() { return id; }
-    shared_ptr<Vehicle> getVehicle() { return vehicle; }
-    shared_ptr<Floor> getFloor() { return floor; }
-    int getSlotIdx() { return slotIdx; }
+    string getId() const { return id; }
+    shared_ptr<Vehicle> getVehicle() const { return vehicle; }
+    shared_ptr<Floor> getFloor() const { return floor; }
+    int getSlotIdx() const { return slotIdx; }
 };
 
 /* ================= PRICING ================= */
 
 class PricingStrategy {
 public:
-    virtual double calc(VehicleType t, long sec) = 0;
+    virtual double calc(VehicleSize size, long sec) = 0;
+    virtual ~PricingStrategy() = default;
 };
 
 class SimplePricing : public PricingStrategy {
-    unordered_map<VehicleType, double> rate;
+    unordered_map<VehicleSize, double> rate;
 
 public:
     SimplePricing() {
-        rate[VehicleType::BIKE] = 1;
-        rate[VehicleType::SCOOTY] = 2;
-        rate[VehicleType::AUTO] = 3;
-        rate[VehicleType::CAR] = 5;
-        rate[VehicleType::TRUCK] = 10;
+        rate[VehicleSize::SMALL] = 1;
+        rate[VehicleSize::MEDIUM] = 3;
+        rate[VehicleSize::LARGE] = 5;
     }
 
-    double calc(VehicleType t, long sec) override {
-        return rate[t] * sec;
+    double calc(VehicleSize size, long sec) override {
+        return rate[size] * sec;
     }
 };
 
@@ -183,9 +165,7 @@ public:
 class ParkingLot {
 
     vector<shared_ptr<Floor>> floors;
-
     unordered_map<string, shared_ptr<Ticket>> active;
-
     shared_ptr<PricingStrategy> pricing;
 
 public:
@@ -234,7 +214,7 @@ public:
         long sec = t->durationSeconds();
 
         double amt = pricing->calc(
-            t->getVehicle()->getType(), sec);
+            t->getVehicle()->getSize(), sec);
 
         cout << "PAY " << id << " " << amt << "\n";
 
@@ -251,13 +231,10 @@ public:
 int main() {
 
     int f; cin >> f;
-
     vector<shared_ptr<Floor>> floors;
 
     for (int i = 0; i < f; i++) {
-
         int n; cin >> n;
-
         vector<shared_ptr<ParkingSlot>> slots;
 
         for (int j = 0; j < n; j++) {
@@ -278,16 +255,14 @@ int main() {
         string cmd; cin >> cmd;
 
         if (cmd == "PARK") {
-
             string num; cin >> num;
 
             auto v = make_shared<Vehicle>(
-                num, VehicleType::CAR, VehicleSize::MEDIUM);
+                num, VehicleSize::MEDIUM);
 
             lot.park(v);
         }
         else {
-
             string id; cin >> id;
             lot.unpark(id);
         }

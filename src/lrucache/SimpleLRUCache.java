@@ -4,12 +4,23 @@ package lrucache;
 1. Clarify Requirements (say this first)
     In-memory cache
     Fixed capacity
-    get(key) and put(key, value)
+    get(key) and put(key, value),
+
     O(1) operations
-    Evict Least Recently Used
+    Eviction Policy :  Least Recently Used
+    Generic types?
+    Thread-safe?
+    TTL needed?
+    Persistence needed?
     Single process (not distributed)
 
+    follow up :
+        remove(K key)
+        Thread-safe?
+        TTL needed?
+        Persistence needed?
  */
+
 
 import java.util.HashMap;
 import java.util.Map;
@@ -112,3 +123,57 @@ public class SimpleLRUCache {
         removeNode1(node);
     }
 }
+
+public class Main {
+    public static void main(String[] args) {
+
+        SimpleLRUCache cache = new SimpleLRUCache(2);
+
+        cache.put(1, 10);
+        cache.put(2, 20);
+
+        System.out.println(cache.get(1)); // 10
+
+        cache.put(3, 30); // evicts key 2
+
+        System.out.println(cache.get(2)); // -1
+
+        cache.put(4, 40); // evicts key 1
+
+        System.out.println(cache.get(1)); // -1
+        System.out.println(cache.get(3)); // 30
+        System.out.println(cache.get(4)); // 40
+    }
+}
+
+
+/*
+import java.util.*;
+
+public class MainUserInput {
+    public static void main(String[] args) {
+
+        Scanner sc = new Scanner(System.in);
+
+        int capacity = sc.nextInt();
+        int q = sc.nextInt();
+
+        SimpleLRUCache cache = new SimpleLRUCache(capacity);
+
+        while (q-- > 0) {
+            String op = sc.next();
+
+            if (op.equals("put")) {
+                int key = sc.nextInt();
+                int value = sc.nextInt();
+                cache.put(key, value);
+            } else if (op.equals("get")) {
+                int key = sc.nextInt();
+                System.out.println(cache.get(key));
+            }
+        }
+
+        sc.close();
+    }
+}
+ */

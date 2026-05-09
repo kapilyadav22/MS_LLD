@@ -1,0 +1,54 @@
++----------------------+
+|      Request         |
++----------------------+
+| - sourceFloor: int   |
+| - destinationFloor: int |
+| - direction: Direction |
+| - timestamp: long    |
++----------------------+
+| + Request(int, int)  |
++----------------------+
+
+
++----------------------+
+|      Elevator        |
++----------------------+
+| - id: int            |
+| - currentFloor: int  |
+| - direction: Direction |
+| - state: ElevatorState |
+| - upRequests: TreeSet<Integer> |
+| - downRequests: TreeSet<Integer> |
++----------------------+
+| + addRequest(Request) |
+| + processRequests()   |
+| # moveToFloor(int)    |
+| # openDoor()          |
++----------------------+
+
+
++---------------------------------------------+
+| <<interface>> ElevatorAssignmentPolicy      |
++---------------------------------------------+
+| + selectElevator(List<Elevator>, Request): Elevator |
++---------------------------------------------+
+
+
++---------------------------------------------+
+|     NearestElevatorPolicy                   |
++---------------------------------------------+
+| implements ElevatorAssignmentPolicy         |
++---------------------------------------------+
+| + selectElevator(List<Elevator>, Request): Elevator |
++---------------------------------------------+
+
+
++----------------------+
+|  ElevatorController  |
++----------------------+
+| - elevators: List<Elevator> |
+| - policy: ElevatorAssignmentPolicy |
++----------------------+
+| + ElevatorController(int, policy) |
+| + submitRequest(Request)          |
++----------------------+
